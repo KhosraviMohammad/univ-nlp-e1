@@ -1,71 +1,84 @@
 import re
 
+import boolean
+
 from utils import text_tokenizer
 
 
-def evaluate_operator(operator, left_set, right_set):
-    """عملگر را اجرا می‌کند."""
-    if operator == "and":
-        return left_set & right_set
-    elif operator == "or":
-        return left_set | right_set
-    elif operator == "not":
-        return left_set - right_set
-    return set()
-
-
-def tokenize_query(query):
+def clear_query(query):
     # r"'([^']*)'|\b\w+\b|[()]"
     pattern = r"'[^']*'|\b\w+\b|[()]"
 
     matches = re.findall(pattern, query)
 
-    parsed_query = []
+    parsed_query = ""
     for match in matches:
-        if match.startswith("'") and match.endswith("'"):
-            token = text_tokenizer(match.strip("'"))
-            parsed_query.extend(token)
-        else:
-            parsed_query.append(match)
+        parsed_query += " " + match.strip("'")
 
     # cleaned_result = [token.strip("'") if token.startswith("'") and token.endswith("'") else token for token in matches]
     return parsed_query
 
 def process_query(query, inverted_index, whole_data):
-    """پرس‌وجو را با مدیریت اولویت‌ها و پرانتزها پردازش می‌کند."""
-    tokens = tokenize_query(query)
-    operators = []
-    operands = []
+    """
+    کوئری منطقی را پردازش می‌کند و نتیجه را بازمی‌گرداند.
+    """
+    # ایجاد یک الگبرای منطقی
 
-    def apply_operator():
-        """عملگر بالای پشته را اجرا کرده و نتیجه را ذخیره می‌کند."""
-        operator = operators.pop()
-        if operator == "not":
-            right_set = operands.pop()
-            operands.append(whole_data - right_set)
+    query = clear_query(query)
+
+    algebra = boolean.BooleanAlgebra()
+
+    # تبدیل کلمات به مجموعه‌ها
+    def map_token_to_set(token):
+        if token.lower() == "not":
+            return "NOT"
+        elif token.lower() == "and":
+            return "AND"
+        elif token.lower() == "or":
+            return "OR"
+        elif token == "(" or token == ")":
+            return token
         else:
-            right_set = operands.pop()
-            left_set = operands.pop()
-            result = evaluate_operator(operator, left_set, right_set)
-            operands.append(result)
+            # بازگرداندن مجموعه مرتبط با کلمه
+            return f"SET_{token}"
 
-    precedence = {"not": 3, "and": 2, "or": 1}  # اولویت عملگرها
-    for token in tokens:
-        if token == "(":
-            operators.append(token)
-        elif token == ")":
-            while operators and operators[-1] != "(":
-                apply_operator()
-            operators.pop()
-        elif token in precedence:
-            while (operators and operators[-1] != "(" and
-                   precedence[operators[-1]] >= precedence[token]):
-                apply_operator()
-            operators.append(token)
-        else:
-            operands.append(inverted_index.get(token, set()))
+    # تجزیه کوئری و جایگزینی کلمات با توکن‌ها
+    tokens = query.split()
+    mapped_query = " ".join(map_token_to_set(token) for token in tokens)
 
-    while operators:
-        apply_operator()
+    # پارس و ارزیابی کوئری
+    expression = algebra.parse(mapped_query)
 
-    return operands[-1] if operands else set()
+    # تابع بازگشتی برای ارزیابی هر گره در کوئری منطقی
+    def evaluate_expression(expr):
+        if isinstance(expr, boolean.Symbol):
+            word = expr.obj
+            if word.startswith("SET_"):
+                # بازگرداندن مجموعه مرتبط
+                word = word[4:]
+                tokens = text_tokenizer(word) or ["", ]
+                token = tokens[0]
+                return inverted_index.get(token, set())
+        elif expr.operator == "~":
+            return whole_data - evaluate_expression(expr.args[0])
+        elif expr.operator == "&":
+            index = 0
+            result = evaluate_expression(expr.args[index])
+            for _ in expr.args:
+                index += 1
+                result &= evaluate_expression(expr.args[index])
+                if index == len(expr.args) - 1:
+                    break
+            return result
+        elif expr.operator == "|":
+            index = 0
+            result = evaluate_expression(expr.args[index])
+            for _ in expr.args:
+                index += 1
+                result |= evaluate_expression(expr.args[index])
+                if index == len(expr.args) - 1:
+                    break
+            return result
+        return set()
+
+    return evaluate_expression(expression)
