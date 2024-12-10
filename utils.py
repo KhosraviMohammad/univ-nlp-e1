@@ -26,5 +26,13 @@ def text_tokenizer(text):
     return lemmatized_tokens
 
 
+def generate_inverted_index(preprocessed_documents):
+    inverted_index = {}
 
+    for doc_id, tokens in preprocessed_documents.items():
+        for token in tokens:
+            if token not in inverted_index:
+                inverted_index[token] = set()
+            inverted_index[token].add(doc_id)
 
+    return inverted_index
