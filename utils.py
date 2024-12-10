@@ -9,11 +9,9 @@ nltk.download('wordnet')
 nltk.download('omw-1.4')
 nltk.download('punkt_tab')
 
-
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
 stop_words = set(stopwords.words('english'))
-
 
 
 def text_tokenizer(text):
