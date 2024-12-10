@@ -3,11 +3,20 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-nltk.download('punkt_tab')
+def download_nltk_resource(resource_name):
+    try:
+        nltk.data.find(resource_name)
+    except LookupError:
+        print(f"Downloading {resource_name}...")
+        nltk.download(resource_name)
+
+
+download_nltk_resource('tokenizers/punkt')
+download_nltk_resource('corpora/stopwords')
+download_nltk_resource('corpora/wordnet')
+download_nltk_resource('corpora/omw-1.4')
+download_nltk_resource('corpora/punkt_tab')
+
 
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
