@@ -1,3 +1,8 @@
+import re
+
+from utils import text_tokenizer
+
+
 def evaluate_operator(operator, left_set, right_set):
     """عملگر را اجرا می‌کند."""
     if operator == "and":
@@ -8,9 +13,27 @@ def evaluate_operator(operator, left_set, right_set):
         return left_set - right_set
     return set()
 
+
+def tokenize_query(query):
+    # r"'([^']*)'|\b\w+\b|[()]"
+    pattern = r"'[^']*'|\b\w+\b|[()]"
+
+    matches = re.findall(pattern, query)
+
+    parsed_query = []
+    for match in matches:
+        if match.startswith("'") and match.endswith("'"):
+            token = text_tokenizer(match.strip("'"))
+            parsed_query.extend(token)
+        else:
+            parsed_query.append(match)
+
+    # cleaned_result = [token.strip("'") if token.startswith("'") and token.endswith("'") else token for token in matches]
+    return parsed_query
+
 def process_query(query, inverted_index, whole_data):
     """پرس‌وجو را با مدیریت اولویت‌ها و پرانتزها پردازش می‌کند."""
-    tokens = query.lower().split()
+    tokens = tokenize_query(query)
     operators = []
     operands = []
 
