@@ -13,9 +13,9 @@ def download_nltk_resource(resource_name):
 
 download_nltk_resource('tokenizers/punkt')
 download_nltk_resource('corpora/stopwords')
-download_nltk_resource('corpora/wordnet')
-download_nltk_resource('corpora/omw-1.4')
-download_nltk_resource('corpora/punkt_tab')
+download_nltk_resource('wordnet')
+download_nltk_resource('omw-1.4')
+download_nltk_resource('punkt_tab')
 
 
 lemmatizer = WordNetLemmatizer()
