@@ -3,6 +3,9 @@ import utils as self_utils
 import re
 
 from binary_query import process_query
+from model import compare_document_query, compare_document_query_as_vector, preprocess_text, vectorize_text_set, \
+    word2vec_model
+from utils import text_tokenizer
 
 
 def split_documents(file_path):
@@ -13,9 +16,6 @@ def split_documents(file_path):
     documents = re.split(r"\.I \d+\n", content)[1:]  # حذف بخش قبل از اولین `.I`
 
     return documents
-
-
-
 
 
 if __name__ == "__main__":
@@ -33,26 +33,61 @@ if __name__ == "__main__":
     revert_index = self_utils.generate_inverted_index(docs_tokens)
     whole_doc_id_set = {doc_id for doc_id in range(1, len(separated_doc_list_text) + 1)}
 
+    document_vector_set = []
+    for doc in separated_doc_list_text:
+        doc_tokens = preprocess_text(doc)
+        document_vector_set.append(vectorize_text_set(doc_tokens, word2vec_model))
+
+
+    def model_type():
+
+        def word_2_vec():
+            query = input("enter your query: \n")
+            query_tokens = preprocess_text(query)
+            query_vectors = vectorize_text_set(query_tokens, word2vec_model)
+            result = compare_document_query_as_vector(query_vectors, document_vector_set)
+            output = []
+            for doc_id in result:
+                output.append(doc_id + 1)
+            print(f"top 10 similar documents is:\n{output}")
+
+        while True:
+            print("select the type of model which is followed")
+            print("1: Word2Vec")
+            print("2: exit")
+            search_type = input("enter a number: \n")
+            match search_type:
+                case "1":
+                    word_2_vec()
+                case "2":
+                    break
+                case _:
+                    print("invalid input. allowed type (1, 2,)")
+
+
+    def binary_type():
+        query = input("enter your query: \n")
+        result = process_query(query, revert_index, whole_doc_id_set)
+        print("result: \n", result)
+
 
     while True:
         print("\n\n")
         print("-----------------")
         print("search type is listed as following")
         print("1: binary")
-        print("2: text (based on tf-idf)")
+        print("2: text (based on models)")
         print("3: exit")
         search_type = input("enter type: \n")
         match search_type:
             case "1":
-                query = input("enter your query: \n")
-                result = process_query(query, revert_index, whole_doc_id_set)
-                print("result: \n", result)
+                binary_type()
             case "2":
-                pass
+                model_type()
             case "3":
                 exit()
             case _:
-                print("invalid input. allowed type (1, 2, 3, 4)")
+                print("invalid input. allowed type (1, 2, 3, 4,)")
 
     # 'titles' and ( 'automatically' or 'retrieving' or 'problems' or 'concerns' or 'descriptive' or 'approximate' or 'difficulties' or 'content' or 'relevance' or 'articles' )
 
