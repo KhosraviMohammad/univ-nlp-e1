@@ -9,11 +9,12 @@ from gensim.models import KeyedVectors
 
 from utils import text_tokenizer
 
-model_path = "path_to_pretrained_word2vec_model.bin"  # مسیر مدل
-word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
+model_path = "./assets/GoogleNews-vectors-negative300.bin.gz"  # مسیر مدل
+word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True, limit=10000)
+
 
 # 2. تبدیل سند به بردار
-def document_to_vector(document, model, tfidf_weights=None):
+def vectorize_text_set(document, model, tfidf_weights=None):
     """
     سند را به بردار تبدیل می‌کند.
     :param document: لیست کلمات در سند
@@ -33,38 +34,24 @@ def document_to_vector(document, model, tfidf_weights=None):
     else:
         return np.zeros(model.vector_size)
 
+
 # 3. پیش‌پردازش کوئری و اسناد
 def preprocess_text(text):
     # همان تابع پیش‌پردازش قبلی
-    tokens = text_tokenizer(text.lower())
-    return [word for word in tokens if word.isalnum()]
+    tokens = text_tokenizer(text, stemming=False, lemmatizing=False, remove_stop_words=False)
+    return tokens
 
-# فرض کنیم `documents` شامل متن‌های اسناد و `queries` شامل کوئری‌ها باشد.
-documents = [
-    "The first document text here.",
-    "Another document about libraries and research.",
-    "This is a different document about Word2Vec models."
-]
-queries = ["libraries and Word2Vec", "research on models"]
 
-# پیش‌پردازش اسناد
-preprocessed_documents = [preprocess_text(doc) for doc in documents]
+def compare_document_query(doc, query):
+    doc_tokens = preprocess_text(doc)
+    query_tokens = preprocess_text(query)
+    document_vectors = vectorize_text_set(doc_tokens, word2vec_model)
+    query_vectors = vectorize_text_set(query_tokens, word2vec_model)
+    similarities = cosine_similarity([query_vectors], [document_vectors])[0]
+    return similarities
 
-# تبدیل اسناد به بردار
-document_vectors = [
-    document_to_vector(doc, word2vec_model) for doc in preprocessed_documents
-]
 
-# پیش‌پردازش کوئری‌ها و تبدیل آنها به بردار
-preprocessed_queries = [preprocess_text(query) for query in queries]
-query_vectors = [document_to_vector(query, word2vec_model) for query in preprocessed_queries]
-
-# 4. محاسبه شباهت کوسینوسی و پیدا کردن بهترین اسناد
-for query_idx, query_vec in enumerate(query_vectors):
-    similarities = cosine_similarity([query_vec], document_vectors)[0]  # شباهت کوئری با تمام اسناد
-    top_documents = np.argsort(similarities)[::-1][:10]  # ۱۰ سند برتر
-    print(f"Query {query_idx + 1}: {queries[query_idx]}")
-    print("Top 10 Documents:")
-    for doc_idx in top_documents:
-        print(f"Document {doc_idx + 1} (Similarity: {similarities[doc_idx]:.4f}): {documents[doc_idx]}")
-    print("-" * 50)
+def compare_document_query_as_vector(query_vectors, document_vectors_set, top=10):
+    similarities = cosine_similarity([query_vectors], document_vectors_set)[0]
+    top_documents = np.argsort(similarities)[::-1][:top]
+    return top_documents
