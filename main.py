@@ -2,10 +2,9 @@ import utils as self_utils
 
 import re
 
-from binary_query import process_query
-from model import compare_document_query, compare_document_query_as_vector, preprocess_text, vectorize_text_set, \
+from boolean_query import process_query
+from model import compare_document_query_as_vector, preprocess_text, vectorize_text_set, \
     word2vec_model
-from utils import text_tokenizer
 
 
 def split_documents(file_path):
