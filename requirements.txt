@@ -1,0 +1,6 @@
+boolean.py==4.0
+nltk==3.9.1
+scikit-learn==1.5.2
+transformers==4.47.1
+gensim==4.3.3
+torch==2.5.1
