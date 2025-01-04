@@ -24,3 +24,21 @@ def mean_average_precision(documents_data_set):
     return ap_sum / len(documents_data_set)  # میانگین AP
 
 
+
+data = [
+    [
+        {
+            "is_relevant": True,
+        },
+        {
+            "is_relevant": False,
+        },
+        {
+            "is_relevant": True,
+        }
+    ]
+
+]
+
+result = mean_average_precision(data)
+print(result)
