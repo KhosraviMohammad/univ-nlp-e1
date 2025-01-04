@@ -2,7 +2,7 @@ import utils as self_utils
 
 import re
 
-from bert_model import encode_texts, batch_encode_texts_parallel, load_embeddings_from_cache, bert_cosine_similarity
+from bert_model import encode_texts, batch_encode_texts_parallel, bert_cosine_similarity
 from boolean_query import process_query
 from model import compare_document_query_as_vector, preprocess_text, vectorize_text_set, \
     word2vec_model
