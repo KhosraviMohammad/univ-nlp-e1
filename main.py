@@ -2,6 +2,7 @@ import utils as self_utils
 
 import re
 
+from bert_model import encode_texts, batch_encode_texts_parallel, load_embeddings_from_cache, bert_cosine_similarity
 from boolean_query import process_query
 from model import compare_document_query_as_vector, preprocess_text, vectorize_text_set, \
     word2vec_model
@@ -37,6 +38,8 @@ if __name__ == "__main__":
         doc_tokens = preprocess_text(doc)
         document_vector_set.append(vectorize_text_set(doc_tokens, word2vec_model))
 
+    document_bert_vector_set = batch_encode_texts_parallel(separated_doc_list_text, batch_size=2, n_jobs=2)
+
 
     def model_type():
 
@@ -50,15 +53,27 @@ if __name__ == "__main__":
                 output.append(doc_id + 1)
             print(f"top 10 similar documents is:\n{output}")
 
+        def bert_model():
+            query = input("enter your query: \n")
+            query_vectors = encode_texts([query])
+            result = bert_cosine_similarity(query_vectors, document_bert_vector_set)
+            output = []
+            for doc_id in result:
+                output.append(doc_id + 1)
+            print(f"top 10 similar documents is:\n{output}\n\n")
+
         while True:
             print("select the type of model which is followed")
             print("1: Word2Vec")
-            print("2: exit")
+            print("2: bert_model")
+            print("3: exit")
             search_type = input("enter a number: \n")
             match search_type:
                 case "1":
                     word_2_vec()
                 case "2":
+                    bert_model()
+                case "3":
                     break
                 case _:
                     print("invalid input. allowed type (1, 2,)")
@@ -109,3 +124,6 @@ if __name__ == "__main__":
     # query3 = "cat AND NOT dog"
     #
     # a = process_query(query2, inverted_index)
+
+
+
