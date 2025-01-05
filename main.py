@@ -47,20 +47,20 @@ if __name__ == "__main__":
             query = input("enter your query: \n")
             query_tokens = preprocess_text(query)
             query_vectors = vectorize_text_set(query_tokens, word2vec_model)
-            result = compare_document_query_as_vector(query_vectors, document_vector_set)
+            result = compare_document_query_as_vector(query_vectors, document_vector_set, top=15)
             output = []
             for doc_id in result:
                 output.append(doc_id + 1)
-            print(f"top 10 similar documents is:\n{output}")
+            print(f"top 15 similar documents is:\n{output}")
 
         def bert_model():
             query = input("enter your query: \n")
             query_vectors = encode_texts([query])
-            result = bert_cosine_similarity(query_vectors, document_bert_vector_set)
+            result = bert_cosine_similarity(query_vectors, document_bert_vector_set, top=15)
             output = []
             for doc_id in result:
                 output.append(doc_id + 1)
-            print(f"top 10 similar documents is:\n{output}\n\n")
+            print(f"top 15 similar documents is:\n{output}\n\n")
 
         while True:
             print("select the type of model which is followed")
